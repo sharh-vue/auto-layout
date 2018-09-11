@@ -1,0 +1,40 @@
+{
+  "scripts": {
+    "dev": "webpack-dev-server --hot",
+    "build": "webpack --color --progress"
+  },
+  "dependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "babel-preset-env": "^1.7.0",
+    "clean-webpack-plugin": "^0.1.19",
+    "cross-env": "^5.2.0",
+    "css-loader": "^1.0.0",
+    "friendly-errors-webpack-plugin": "^1.7.0",
+    "html-webpack-plugin": "^3.2.0",
+    "interactjs": "^1.3.4",
+    "less": "^3.8.1",
+    "less-loader": "^4.1.0",
+    "mini-css-extract-plugin": "^0.4.2",
+    "postcss": "^7.0.2",
+    "postcss-loader": "^3.0.0",
+    "ts-loader": "^5.0.0",
+    "typescript": "^3.0.3",
+    "url-loader": "^1.1.1",
+    "vue": "^2.5.17",
+    "vue-class-component": "^6.2.0",
+    "vue-grid-layout": "^2.2.0",
+    "vue-loader": "^15.4.1",
+    "vue-style-loader": "^4.1.2",
+    "webpack": "^4.17.2",
+    "webpack-cli": "^3.1.0"
+  },
+  "devDependencies": {
+    "postcss-import": "^12.0.0",
+    "postcss-px2rem": "^0.3.0",
+    "precss": "^3.1.2",
+    "vue-template-compiler": "^2.5.17",
+    "webpack-dev-server": "^3.1.8"
+  }
+}

@@ -5,13 +5,19 @@
       <div class="wrapper">
         <ul id="my-list" ref="list">
           <li draggable="true" class="li">
-            <div class="move-item"> item 1 </div>
+            <div class="move-item"> 
+              <img src="http://img2.xiazaizhijia.com/walls/20140825/middle_85359d20308342c.jpg" alt="">
+            </div>
+          </li>
+          <li draggable="true" data-position="absolute" class="li">
+            <div class="move-item">
+              <img src="http://img4.duitang.com/uploads/item/201206/29/20120629174422_QW3Kh.thumb.700_0.jpeg" alt="">
+            </div>
           </li>
           <li draggable="true" class="li">
-            <div class="move-item"> item 2 </div>
-          </li>
-          <li draggable="true" class="li">
-            <div class="move-item"> item 3 </div>
+            <div class="move-item">
+              <img src="http://img3.duitang.com/uploads/item/201602/24/20160224105804_3QiBk.thumb.700_0.jpeg" alt="">
+            </div>
           </li>
         </ul>
         <component :is="component">attributes</component>
@@ -94,8 +100,8 @@ export default {
     this.bindDrop('#outer-dropzone')
     var dragEl;
     this.on('dragstart', 'li', function(e){
-      dragEl = e.target;
-      console.log(e.target, 'dragstart');
+      dragEl = this;
+      console.log(this, 'dragstart');
     })
     this.on('drag', 'li', function(e){
       // console.log(e.target, 'drag');
@@ -118,12 +124,14 @@ export default {
       var cloneNode = dragEl.cloneNode(true)
       cloneNode.removeAttribute('draggable')
       console.log(e.clientX, e.clientY, e.offsetX, e.offsetY)
-      // cloneNode.style.position = 'absolute';
-      // cloneNode.style.left = e.clientX + 'px';
-      // cloneNode.style.top = e.clientY + 'px';
+      if(cloneNode.getAttribute('data-position') === 'absolute'){
+        cloneNode.style.left = e.clientX + 'px';
+        cloneNode.style.top = e.clientY + 'px';
+        cloneNode.style.position = 'absolute';
+      }
       var bound = this.getBoundingClientRect();
       console.log(bound)
-      cloneNode.style.transform = `translate(${e.clientX - bound.x}px, ${e.clientY - bound.y}px)`
+      // cloneNode.style.transform = `translate(${e.clientX - bound.x}px, ${e.clientY - bound.y}px)`
       // var dot = document.createElement('div');
       // dot.style = `position: absolute; top: ${e.clientY}px; left: ${e.clientX}px;width: 10px; height: 10px;background: red;`;
       // this.appendChild(dot)
@@ -145,10 +153,10 @@ export default {
           relativePoints: [ { x: 0, y: 0 } ]
         },
         onmove: dragMoveListener,
-        restrict: {
-          restriction: 'parent',
-          elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
-        },
+        // restrict: {
+        //   restriction: 'parent',
+        //   elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+        // },
       })
       .resizable({
         // resize from all edges and corners
@@ -185,9 +193,11 @@ export default {
 
         target.setAttribute('data-x', x);
         target.setAttribute('data-y', y);
-        target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
+        // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
       });
        function dragMoveListener (event) {
+        var {dx, dy, clientY, clientX, clientX0, clientY0} = event
+        console.log(dx, dy, clientY, clientX, clientX0, clientY0)
         var target = event.target,
             // keep the dragged position in the data-x/data-y attributes
             x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
@@ -228,6 +238,10 @@ export default {
   width: 100px;
   background: gray;
   margin: 10px 0;
+  overflow: hidden;
+}
+.li img{
+  width: 100%;
 }
 
 #outer-dropzone {

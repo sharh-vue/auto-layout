@@ -4,13 +4,13 @@
     <div class="layout-item components">
       <div class="wrapper">
         <ul id="my-list" ref="list">
-          <li class="li">
+          <li draggable="true" class="li">
             <div class="move-item"> item 1 </div>
           </li>
-          <li class="li">
+          <li draggable="true" class="li">
             <div class="move-item"> item 2 </div>
           </li>
-          <li class="li">
+          <li draggable="true" class="li">
             <div class="move-item"> item 3 </div>
           </li>
         </ul>
@@ -20,10 +20,7 @@
     <!-- 布局列表 -->
     <div class="layout-item layouts">
       <div class="wrapper">
-        <div id="outer-dropzone" class="dropzone">
-          #outer-dropzone
-          <div id="inner-dropzone" class="dropzone">#inner-dropzone</div>
-        </div>
+        <div id="outer-dropzone" class="dropzone"></div>
       </div>
     </div>
     <!-- 属性列表 -->
@@ -47,155 +44,171 @@ export default {
     XButton
   },
   methods: {
-    dragMoveListener (event) {
-      var target = event.target,
-          // keep the dragged position in the data-x/data-y attributes
-          x = (parseFloat(target.getAttribute('data-x')) || 0) + event.clientX,
-          y = (parseFloat(target.getAttribute('data-y')) || 0) + event.clientY;
-      var child;
-      if(target._child){
-        child = target._child
-      }else{
-        child = target.firstElementChild;
-        target._child = target.firstElementChild
-      }
-      var cloneNode;
-      if(child._cloneNode){
-        cloneNode = child._cloneNode;
-      }else{
-        cloneNode = child.cloneNode(true);
-        child._cloneNode = cloneNode;
-        target.replaceChild(cloneNode, child)
-        document.body.appendChild(child)
-      }
-      // console.log(cloneNode);
-      // document.body.appendChild(cloneNode)
-      // translate the element
-      child.style.left = x + 'px';
-      child.style.top = y + 'px';
-      // child.style.webkitTransform =
-      // child.style.transform =
-      //   'translate(' + x + 'px, ' + y + 'px)';
-      // target.setAttribute('data-x', x);
-      // target.setAttribute('data-y', y);
+    bindDrop(selector){
+      var ele = document.querySelector(selector);
+      var dragingEl;
+
+
+      ele.addEventListener('dragstart', function (e) {
+          dragingEl = e.target;
+          dragingEl.classList.add('draging');
+      })
+      ele.addEventListener('dragover', function (e) {
+        ele.classList.add('drop-active')
+          e.preventDefault(); //阻止默认动作
+      })
+      /*源对象释放，目标对象上触发的事件*/
+      ele.addEventListener('drop', function (e) {
+          console.log(e)
+          ele.classList.remove('drop-active')
+          // dragingEl.classList.remove('draging');
+          // if (e.target.nodeName === 'LI') {
+          //     e.target.parentNode.insertBefore(ele, e.target); //将源对象元素插入到目标元素前面
+          // }
+      })
     },
-    dropZone(){
-      interact('.dropzone').dropzone({
-      // only accept elements matching this CSS selector
-      accept: '.li',
-      // Require a 75% element overlap for a drop to be possible
-      overlap: 0.75,
+    on(eventName, selector, fn){
+      document.addEventListener(eventName, function(e){
+        // console.log(e);
+        for(var i = 0; i < e.path.length - 2; i++){
+          var el = e.path[i];
+          if(el.tagName.toLowerCase() === selector 
+            || '#'+el.getAttribute('id') === selector
+            || '.'+el.classList.value.replace(' ', '.') === selector){
+            fn && fn.call(el, e);
+            // fn && fn.apply(el, [e]);
+            // fn && fn.bind(el)(e);
+            // fn && fn(e);
+            break;
+          }
+        }
+      })
+    },
+    bindDrag(){
+      document.addEventListener('dragstart', function(e){
 
-      // listen for drop related events:
-
-      ondropactivate: function (event) {
-        // add active dropzone feedback
-        event.target.classList.add('drop-active');
-      },
-      ondragenter: function (event) {
-        console.log(event)
-        var draggableElement = event.relatedTarget,
-            dropzoneElement = event.target;
-
-        // feedback the possibility of a drop
-        dropzoneElement.classList.add('drop-target');
-        draggableElement.classList.add('can-drop');
-        draggableElement.textContent = 'Dragged in';
-      },
-      ondragleave: function (event) {
-        // remove the drop feedback style
-        event.target.classList.remove('drop-target');
-        event.relatedTarget.classList.remove('can-drop');
-        event.relatedTarget.textContent = 'Dragged out';
-      },
-      ondrop: function (event) {
-        console.log(event);
-        event.relatedTarget.textContent = 'Dropped';
-      },
-      ondropdeactivate: function (event) {
-        // remove active dropzone feedback
-        event.target.classList.remove('drop-active');
-        event.target.classList.remove('drop-target');
-      }
-    });
+      })
     }
   },
   mounted(){
-    this.dropZone();
-    var interactEl = interact('.li')
-    .draggable({
-      // enable inertial throwing
-      inertia: true,
-      // keep the element within the area of it's parent
-      // restrict: {
-      //   restriction: "parent",
-      //   endOnly: true,
-      //   elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
-      // },
-      // enable autoScroll
-      autoScroll: true,
-
-      // call this function on every dragmove event
-      onmove: this.dragMoveListener,
-      // call this function on every dragend event
-      onend: function (event) {
-        event.target._child = null;
-        console.log(event)
-      }
+    this.bindDrop('#outer-dropzone')
+    var dragEl;
+    this.on('dragstart', 'li', function(e){
+      dragEl = e.target;
+      console.log(e.target, 'dragstart');
     })
-    .resizable({
-      // resize from all edges and corners
-      edges: { left: true, right: true, bottom: true, top: true },
+    this.on('drag', 'li', function(e){
+      // console.log(e.target, 'drag');
+    })
+    this.on('dragend', 'li', function(e){
+      console.log(e.target, 'dragend');
+    })
+    this.on('dragover', '#outer-dropzone', function(e){
+      e.target.classList.add('drop-active')
+      e.preventDefault(); //阻止默认动作
+    })
+    this.on('dragenter', '#outer-dropzone', function(e){
+      console.log('dragenter')
+    })
+    this.on('dragleave', '#outer-dropzone', function(e){
+       console.log('dragleave')
+    })
+    this.on('drop', '#outer-dropzone', function(e){
+      e.target.classList.remove('drop-active')
+      var cloneNode = dragEl.cloneNode(true)
+      cloneNode.removeAttribute('draggable')
+      console.log(e.clientX, e.clientY, e.offsetX, e.offsetY)
+      // cloneNode.style.position = 'absolute';
+      // cloneNode.style.left = e.clientX + 'px';
+      // cloneNode.style.top = e.clientY + 'px';
+      var bound = this.getBoundingClientRect();
+      console.log(bound)
+      cloneNode.style.transform = `translate(${e.clientX - bound.x}px, ${e.clientY - bound.y}px)`
+      // var dot = document.createElement('div');
+      // dot.style = `position: absolute; top: ${e.clientY}px; left: ${e.clientX}px;width: 10px; height: 10px;background: red;`;
+      // this.appendChild(dot)
+      if(e.target === this){
+        this.appendChild(cloneNode)
+      }else if(e.target.parentNode == this){
+        this.insertBefore(cloneNode, e.target)
+      }
+      e.preventDefault(); //阻止默认动作
+    })
 
-      // keep the edges inside the parent
-      restrictEdges: {
-        outer: 'parent',
-        endOnly: true,
-      },
+    interact('#outer-dropzone li')
+      .draggable({
+        snap: {
+          targets: [
+            interact.createSnapGrid({ x: 30, y: 30 })
+          ],
+          range: Infinity,
+          relativePoints: [ { x: 0, y: 0 } ]
+        },
+        onmove: dragMoveListener,
+        restrict: {
+          restriction: 'parent',
+          elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+        },
+      })
+      .resizable({
+        // resize from all edges and corners
+        edges: { left: true, right: true, bottom: true, top: true },
 
-      // minimum size
-      restrictSize: {
-        min: { width: 100, height: 50 },
-      },
+        // keep the edges inside the parent
+        restrictEdges: {
+          outer: 'parent',
+          endOnly: true,
+        },
 
-      inertia: true,
-    }) .on('resizemove', function (event) {
-      var target = event.target,
-          x = (parseFloat(target.getAttribute('data-x')) || 0),
-          y = (parseFloat(target.getAttribute('data-y')) || 0);
-          console.log(target)
-      var cloneNode = target;
-      // update the element's style
-      cloneNode.style.width  = event.rect.width + 'px';
-      cloneNode.style.height = event.rect.height + 'px';
+        // minimum size
+        restrictSize: {
+          min: { width: 100, height: 50 },
+        },
 
-      // translate when resizing from top or left edges
-      x += event.deltaRect.left;
-      y += event.deltaRect.top;
-      // cloneNode.style.left = x + 'px';
-      // cloneNode.style.top = x + 'px';
-      cloneNode.style.webkitTransform = target.style.transform =
-          'translate(' + x + 'px,' + y + 'px)';
+        inertia: true,
+      })
+      .on('resizemove', function (event) {
+        var target = event.target,
+            x = (parseFloat(target.getAttribute('data-x')) || 0),
+            y = (parseFloat(target.getAttribute('data-y')) || 0);
 
-      cloneNode.setAttribute('data-x', x);
-      cloneNode.setAttribute('data-y', y);
-      // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
-    });
-    console.log(interactEl)
+        // update the element's style
+        target.style.width  = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+
+        // translate when resizing from top or left edges
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        target.style.webkitTransform = target.style.transform =
+            'translate(' + x + 'px,' + y + 'px)';
+
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+        target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
+      });
+       function dragMoveListener (event) {
+        var target = event.target,
+            // keep the dragged position in the data-x/data-y attributes
+            x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+            y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+        // translate the element
+        target.style.webkitTransform =
+        target.style.transform =
+          'translate(' + x + 'px, ' + y + 'px)';
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      }
+       window.dragMoveListener = dragMoveListener;
   }
 }
 </script>
 
 <style scoped>
 
-.move-item{
-  height: 50px;
-  width: 50px;
-  background: gold;
-  z-index: 0;
-  position: absolute;
-  display: inline-block;
-}
 .layout-item{
   float: left;
 }
@@ -212,17 +225,17 @@ export default {
 .li{
   display: block;
   height: 140px;
+  width: 100px;
   background: gray;
   margin: 10px 0;
 }
 
 #outer-dropzone {
-  height: 140px;
+  min-height: 140px;
+  max-height: 100vh;
+  overflow: auto;
 }
 
-#inner-dropzone {
-  height: 80px;
-}
 
 .layouts{
   height: 100vh;
@@ -239,12 +252,12 @@ export default {
   border: dashed 4px transparent;
   border-radius: 4px;
   margin: 10px auto 30px;
-  padding: 10px;
   width: 80%;
   transition: background-color 0.3s;
 }
 
 .drop-active {
+  border: solid 2px #fff;
   border-color: #aaa;
 }
 

@@ -4,7 +4,9 @@
     <div class="layout-item components">
       <div class="wrapper">
         <ul id="my-list" ref="list">
-          <li draggable="true" class="li">
+          <li 
+          draggable="true" 
+          class="li">
             <div class="move-item"> 
               <img src="http://img2.xiazaizhijia.com/walls/20140825/middle_85359d20308342c.jpg" alt="">
             </div>
@@ -26,13 +28,20 @@
     <!-- 布局列表 -->
     <div class="layout-item layouts">
       <div class="wrapper">
-        <div id="outer-dropzone" class="dropzone"></div>
+        <div id="outer-dropzone" class="dropzone">
+          
+        </div>
       </div>
     </div>
     <!-- 属性列表 -->
     <div class="layout-item attributes">
       <div class="wrapper">
-        attributes
+        <div v-for="attr in attributes">
+          <label>
+            {{attr.name}}
+            <input type="text" :name="attr.name" v-model="attr.value">
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -43,7 +52,48 @@ let interact = require('interactjs')
 export default {
   data(){
     return {
-      component: 'x-button'
+      component: 'x-button',
+      activeEl: null,
+      attributes: [
+        {
+          name:'backgroundColor',
+          value: '',
+          default: ''
+        },
+        {
+          name:'position',
+          value: '',
+          default: ''
+        },
+        {
+          name:'zIndex',
+          value: '',
+          default: ''
+        }
+      ]
+    }
+  },
+  watch: {
+    attributes: {
+      handler(newVal, oldVal){
+        console.log(newVal)
+        if(this.activeEl){
+          newVal.forEach((val)=>{
+            this.activeEl.style[val.name] = val.value
+          })
+        }
+      },
+      deep: true
+    },
+    activeEl(el){
+      console.log(el)
+      this.attributes.forEach((val)=>{
+        if(el.style[val.name]){
+          val.value = el.style[val.name]
+        }else{
+          val.value = val.default;
+        }
+      })
     }
   },
   components: {
@@ -89,46 +139,60 @@ export default {
           }
         }
       })
-    },
-    bindDrag(){
-      document.addEventListener('dragstart', function(e){
-
-      })
     }
   },
+  beforeDestroy(){
+    console.log('beforeDestroy')
+    $(document).off('dragstart drag dragend dragover dragenter dragleave drop')
+  },
+  actived(){
+    console.log('actived')
+  },
+  deactived(){
+    console.log('deactived')
+  },
   mounted(){
-    this.bindDrop('#outer-dropzone')
+    console.log('mounted')
+    var vm = this;
     var dragEl;
-    this.on('dragstart', 'li', function(e){
+
+    $(document).on('dragstart', '#my-list li', function(e){
       dragEl = this;
-      console.log(this, 'dragstart');
     })
-    this.on('drag', 'li', function(e){
-      // console.log(e.target, 'drag');
+    .on('click', '.layout-copy', function(e){
+      vm.activeEl = this;
     })
-    this.on('dragend', 'li', function(e){
+    .on('drag', '#my-list li', function(e){
+
+    })
+    .on('dragend', '#my-list li', function(e){
       console.log(e.target, 'dragend');
     })
-    this.on('dragover', '#outer-dropzone', function(e){
-      e.target.classList.add('drop-active')
+    .on('dragover', '#outer-dropzone', function(e){
+      // e.target.classList.add('drop-active')
       e.preventDefault(); //阻止默认动作
     })
-    this.on('dragenter', '#outer-dropzone', function(e){
+    .on('dragenter', '#outer-dropzone', function(e){
+      this.classList.add('drop-active')
       console.log('dragenter')
     })
-    this.on('dragleave', '#outer-dropzone', function(e){
+    .on('dragleave', '#outer-dropzone', function(e){
+      this.classList.remove('drop-active')
        console.log('dragleave')
     })
-    this.on('drop', '#outer-dropzone', function(e){
-      e.target.classList.remove('drop-active')
+    .on('drop', '#outer-dropzone', function(e){
+      e.preventDefault(); //阻止默认动作
+      // e.target.classList.remove('drop-active')
       var cloneNode = dragEl.cloneNode(true)
+      vm.activeEl = cloneNode;
+      $(cloneNode).addClass('layout-copy');
       cloneNode.removeAttribute('draggable')
       console.log(e.clientX, e.clientY, e.offsetX, e.offsetY)
       if(cloneNode.getAttribute('data-position') === 'absolute'){
-        cloneNode.style.left = e.clientX + 'px';
-        cloneNode.style.top = e.clientY + 'px';
-        cloneNode.style.position = 'absolute';
       }
+      cloneNode.style.left = e.clientX + 'px';
+      cloneNode.style.top = e.clientY + 'px';
+      cloneNode.style.position = 'absolute';
       var bound = this.getBoundingClientRect();
       console.log(bound)
       // cloneNode.style.transform = `translate(${e.clientX - bound.x}px, ${e.clientY - bound.y}px)`
@@ -137,26 +201,44 @@ export default {
       // this.appendChild(dot)
       if(e.target === this){
         this.appendChild(cloneNode)
-      }else if(e.target.parentNode == this){
-        this.insertBefore(cloneNode, e.target)
+      }else{
+        this.insertBefore(cloneNode, $(e.target).closest('li')[0])
       }
-      e.preventDefault(); //阻止默认动作
+
     })
 
     interact('#outer-dropzone li')
-      .draggable({
-        snap: {
-          targets: [
-            interact.createSnapGrid({ x: 30, y: 30 })
-          ],
-          range: Infinity,
-          relativePoints: [ { x: 0, y: 0 } ]
+        .draggable({
+          snap: {
+            targets: [
+              interact.createSnapGrid({ x: 30, y: 30 })
+            ],
+            range: Infinity,
+            relativePoints: [ { x: 0, y: 0 } ]
+          },
+        // enable inertial throwing
+        inertia: true,
+        // keep the element within the area of it's parent
+        restrict: {
+          restriction: "parent",
+          endOnly: true,
+          elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
         },
+        // enable autoScroll
+        autoScroll: true,
+
+        // call this function on every dragmove event
         onmove: dragMoveListener,
-        // restrict: {
-        //   restriction: 'parent',
-        //   elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
-        // },
+        // call this function on every dragend event
+        onend: function (event) {
+          // var textEl = event.target.querySelector('p');
+
+          // textEl && (textEl.textContent =
+          //   'moved a distance of '
+          //   + (Math.sqrt(Math.pow(event.pageX - event.x0, 2) +
+          //                Math.pow(event.pageY - event.y0, 2) | 0))
+          //       .toFixed(2) + 'px');
+        }
       })
       .resizable({
         // resize from all edges and corners
@@ -179,7 +261,7 @@ export default {
         var target = event.target,
             x = (parseFloat(target.getAttribute('data-x')) || 0),
             y = (parseFloat(target.getAttribute('data-y')) || 0);
-
+        vm.activeEl = target;
         // update the element's style
         target.style.width  = event.rect.width + 'px';
         target.style.height = event.rect.height + 'px';
@@ -195,9 +277,8 @@ export default {
         target.setAttribute('data-y', y);
         // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
       });
-       function dragMoveListener (event) {
-        var {dx, dy, clientY, clientX, clientX0, clientY0} = event
-        console.log(dx, dy, clientY, clientX, clientX0, clientY0)
+
+        function dragMoveListener (event) {
         var target = event.target,
             // keep the dragged position in the data-x/data-y attributes
             x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
@@ -212,7 +293,6 @@ export default {
         target.setAttribute('data-x', x);
         target.setAttribute('data-y', y);
       }
-       window.dragMoveListener = dragMoveListener;
   }
 }
 </script>
@@ -271,7 +351,7 @@ export default {
 }
 
 .drop-active {
-  border: solid 2px #fff;
+  border: dashed 2px #fff;
   border-color: #aaa;
 }
 

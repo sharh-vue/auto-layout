@@ -19,6 +19,12 @@ let plugins = [
   new VueLoaderPlugin(),
   new webpackHtmlPlugin({
     template: './index.html'
+  }),
+  new webpack.ProvidePlugin({
+    $: 'jquery',
+    jQuery: 'jquery',
+    'window.jQuery': 'jquery',
+    'window.$': 'jquery'
   })
 ]
 
